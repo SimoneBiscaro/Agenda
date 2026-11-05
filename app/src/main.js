@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef } from '../vendor/preact-hooks.mjs';
 import { html } from './ui/html.js';
 import { signal, useSignal, useQuery } from './store/state.js';
 import { route, startRouter, navigate, pathFor, todayDs, hourNow } from './router.js';
-import { step, startOfWeek, monthStart, weekLabel, monthLabel, dayLabel } from './domain/dates.js';
+import { step, startOfWeek, monthStart, weekLabel, monthLabel, dayLabel, weekFromMonth } from './domain/dates.js';
 import { Binding } from './ui/Binding.js';
 import { Header } from './ui/Header.js';
 import { PageFlip } from './ui/PageFlip.js';
@@ -127,9 +127,7 @@ function headerFor(r, t) {
     ...(isWeek ? weekLabel(r.anchor) : monthLabel(r.anchor, t)),
     view: r.view,
     // Settimana → mese che la contiene; Mese → la settimana di oggi se è questo mese, altrimenti la prima.
-    onView: (v) => go(v, v === 'mese'
-      ? monthStart(r.anchor)
-      : (monthStart(r.anchor) === monthStart(t) ? t : r.anchor)),
+    onView: (v) => go(v, v === 'mese' ? monthStart(r.anchor) : weekFromMonth(r.anchor, t)),
     onSettings: () => navigate('/impostazioni'),
     onToday: () => go(r.view, isWeek ? t : monthStart(t)),
     prevLabel: isWeek ? 'Settimana prima' : 'Mese prima',
@@ -207,9 +205,9 @@ function App() {
   };
   let page;
   if (r.view === 'settimana') page = html`<${SettimanaView} anchor=${r.anchor} today=${t} events=${events} categories=${categories} onOpenDay=${openDay} />`;
-  else if (r.view === 'mese') page = html`<${MeseView} anchor=${r.anchor} today=${t} onOpenDay=${openDay} />`;
+  else if (r.view === 'mese') page = html`<${MeseView} anchor=${r.anchor} today=${t} events=${events} categories=${categories} onOpenDay=${openDay} />`;
   else if (r.view === 'giorno') page = html`<${GiornoView} anchor=${r.anchor} today=${t} nowHour=${hour} events=${events} categories=${categories} onNew=${openNew} onEdit=${editOccurrence} />`;
-  else if (r.view === 'impostazioni') page = html`<${ImpostazioniView} today=${t} />`;
+  else if (r.view === 'impostazioni') page = html`<${ImpostazioniView} today=${t} events=${events} categories=${categories} />`;
   else page = html`<${CatalogoView} />`;
 
   const calendar = CALENDAR.has(r.view);

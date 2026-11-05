@@ -1,17 +1,45 @@
 import { useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
+import { Icon } from '../../ui/icons.js';
 import { Confirm } from '../../ui/Confirm.js';
 import { showToast } from '../../ui/Toast.js';
+import { useQuery } from '../../store/state.js';
 import { loadDemo, clearDemo } from '../../store/demo.js';
+import { loadSettings, updateSettings, applyLargeText } from '../../store/settings.js';
+import { OTHER_ID, sortCategories } from '../../domain/categories.js';
 import { APP_VERSION } from '../../version.js';
+import { CategoriaSheet } from './CategoriaSheet.js';
+
+/** "Testo più grande": applicato subito alla pagina e salvato per i prossimi avvii. */
+function LargeTextSwitch() {
+  const { data } = useQuery(() => loadSettings(), ['settings']);
+  const on = Boolean(data?.largeText);
+  const toggle = async (next) => {
+    applyLargeText(next);
+    try {
+      await updateSettings({ largeText: next });
+    } catch {
+      applyLargeText(!next);
+      showToast('Non è stato salvato. Riprova.');
+    }
+  };
+  return html`
+    <label class="switch">
+      <input type="checkbox" role="switch" checked=${on} disabled=${!data}
+        onChange=${(e) => toggle(e.currentTarget.checked)} />
+      <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+      <span class="switch__label">Testo più grande<span class="switch__hint">Tutte le scritte diventano più grandi</span></span>
+    </label>`;
+}
 
 /**
- * Impostazioni. Fase 3: Area tecnica (chiusa di default) con gli impegni di prova e la versione.
- * @param {{ today: string }} props
+ * Impostazioni (§8): Testo più grande, Categorie, Copia di sicurezza, Area tecnica.
+ * @param {{ today: string, events: object[], categories: object[] }} props
  */
-export function ImpostazioniView({ today }) {
+export function ImpostazioniView({ today, events, categories }) {
   const [busy, setBusy] = useState(false);
   const [askClear, setAskClear] = useState(false);
+  const [editor, setEditor] = useState(null); // { id, open, category? }
 
   const run = async (fn, done) => {
     if (busy) return;
@@ -25,9 +53,43 @@ export function ImpostazioniView({ today }) {
       setBusy(false);
     }
   };
+  const openEditor = (category) => setEditor({ id: Date.now(), open: true, category });
+  const cats = sortCategories(categories);
 
   return html`
     <div class="settings">
+      <section class="settings__card" aria-labelledby="set-read">
+        <h2 class="settings__title" id="set-read">Lettura</h2>
+        <${LargeTextSwitch} />
+      </section>
+
+      <section class="settings__card" aria-labelledby="set-cat">
+        <h2 class="settings__title" id="set-cat">Categorie</h2>
+        <ul class="catlist">
+          ${cats.map((c) => (c.id === OTHER_ID
+            ? html`<li key=${c.id} class="catlist__row catlist__row--locked">
+                <span class="legend__dot" style=${`--cat:${c.color}`} aria-hidden="true"></span>
+                <span class="catlist__name">${c.name}</span>
+                <span class="catlist__note">sempre presente</span>
+              </li>`
+            : html`<li key=${c.id}>
+                <button type="button" class="catlist__row" onClick=${() => openEditor(c)} aria-label=${`${c.name}. Rinomina, cambia colore o elimina`}>
+                  <span class="legend__dot" style=${`--cat:${c.color}`} aria-hidden="true"></span>
+                  <span class="catlist__name">${c.name}</span>
+                  <span class="catlist__edit" aria-hidden="true">Modifica <${Icon} name="chevron-right" size=${20} stroke=${2.6} /></span>
+                </button>
+              </li>`))}
+        </ul>
+        <button type="button" class="btn btn--secondary btn--block" onClick=${() => openEditor(null)}>
+          <${Icon} name="plus" size=${20} stroke=${2.6} />Aggiungi una categoria
+        </button>
+      </section>
+
+      <section class="settings__card" aria-labelledby="set-copy">
+        <h2 class="settings__title" id="set-copy">Copia di sicurezza</h2>
+        <p class="settings__text">Non ancora collegata.</p>
+      </section>
+
       <details class="settings__tech">
         <summary>Area tecnica</summary>
         <div class="settings__tech-body">
@@ -41,6 +103,8 @@ export function ImpostazioniView({ today }) {
         </div>
       </details>
     </div>
+    ${editor && html`<${CategoriaSheet} key=${editor.id} open=${editor.open} category=${editor.category}
+      categories=${categories} events=${events} onClose=${() => setEditor({ ...editor, open: false })} />`}
     <${Confirm} open=${askClear} question="Cancellare gli impegni di prova?"
       detail="Gli impegni che hai scritto tu restano." yesLabel="Sì, cancella"
       onNo=${() => setAskClear(false)}
