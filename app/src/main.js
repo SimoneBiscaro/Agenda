@@ -1,7 +1,7 @@
 import { render } from '../vendor/preact.mjs';
 import { useEffect, useLayoutEffect, useRef } from '../vendor/preact-hooks.mjs';
 import { html } from './ui/html.js';
-import { signal, useSignal, useQuery } from './store/state.js';
+import { signal, useSignal, useQuery, entityVersion } from './store/state.js';
 import { route, startRouter, navigate, pathFor, todayDs, hourNow } from './router.js';
 import { step, startOfWeek, monthStart, weekLabel, monthLabel, dayLabel, weekFromMonth } from './domain/dates.js';
 import { Binding } from './ui/Binding.js';
@@ -18,6 +18,8 @@ import { ImpegnoSheet } from './views/impegno/ImpegnoSheet.js';
 import { newEventDate, newForm, editForm } from './domain/events.js';
 import { classifySwipe, isTapLocked } from './domain/swipe.js';
 import { getRepo } from './store/repo.js';
+import { SyncDot } from './ui/SyncDot.js';
+import { dotState, initCloud, scheduleSoon, syncState } from './store/cloud.js';
 import { seedDefaults, startupMaintenance } from './store/seed.js';
 import { loadSettings, applyLargeText } from './store/settings.js';
 
@@ -97,6 +99,10 @@ function UpdateBanner() {
 }
 
 /* ---------- App ---------- */
+/** Dal puntino si apre Impostazioni già sulla sezione "Copia di sicurezza". */
+let focusCopy = false;
+const openCopySettings = () => { focusCopy = true; navigate('/impostazioni'); };
+
 function headerFor(r, t) {
   const go = (view, anchor) => navigate(pathFor(view, anchor));
   if (r.view === 'impostazioni' || r.view === 'catalogo') {
@@ -184,6 +190,8 @@ function useSwipe(r) {
 function App() {
   const r = useSignal(route);
   const t = useSignal(today);
+  const sync = useSignal(syncState);
+  const dot = dotState(sync.phase);
   const hour = useSignal(nowHour);
   const ed = useSignal(editor);
   const { data = EMPTY } = useQuery(loadAgenda, ['event', 'category']);
@@ -207,7 +215,10 @@ function App() {
   if (r.view === 'settimana') page = html`<${SettimanaView} anchor=${r.anchor} today=${t} events=${events} categories=${categories} onOpenDay=${openDay} />`;
   else if (r.view === 'mese') page = html`<${MeseView} anchor=${r.anchor} today=${t} events=${events} categories=${categories} onOpenDay=${openDay} />`;
   else if (r.view === 'giorno') page = html`<${GiornoView} anchor=${r.anchor} today=${t} nowHour=${hour} events=${events} categories=${categories} onNew=${openNew} onEdit=${editOccurrence} />`;
-  else if (r.view === 'impostazioni') page = html`<${ImpostazioniView} today=${t} events=${events} categories=${categories} />`;
+  else if (r.view === 'impostazioni') {
+    page = html`<${ImpostazioniView} today=${t} events=${events} categories=${categories} focusCopy=${focusCopy} />`;
+    focusCopy = false;
+  }
   else page = html`<${CatalogoView} />`;
 
   const calendar = CALENDAR.has(r.view);
@@ -215,7 +226,8 @@ function App() {
     <div class="app">
       <${Binding} />
       <${UpdateBanner} />
-      <${Header} ...${headerFor(r, t)} />
+      <${Header} ...${headerFor(r, t)}
+        status=${dot && CALENDAR.has(r.view) ? html`<${SyncDot} state=${dot} onClick=${openCopySettings} />` : null} />
       <main class="app__main" id="contenuto" ref=${mainRef}>
         ${calendar
           ? html`<${PageFlip} flipKey=${key} dir=${dir} ...${swipe}>${page}<//>`
@@ -246,5 +258,7 @@ async function initStore() {
 
 startRouter();
 render(html`<${App} />`, document.getElementById('app'));
-initStore();
+// Ogni modifica locale (impegni, categorie, impostazioni) va nella copia di sicurezza entro pochi secondi.
+for (const entity of ['event', 'category', 'settings']) entityVersion(entity).subscribe(scheduleSoon);
+initStore().then(initCloud).catch((err) => console.warn('Copia di sicurezza non avviata:', err));
 registerServiceWorker();

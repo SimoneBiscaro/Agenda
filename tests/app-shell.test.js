@@ -101,11 +101,13 @@ test('index.html: viewport-fit=cover, zoom consentito, lingua italiana', () => {
   assert.match(index, /rel="apple-touch-icon"/);
 });
 
-test('config.js non contiene segreti e in Fase 1 è vuota', () => {
+test('config.js contiene solo URL e chiave pubblica, nessun segreto', () => {
   const cfg = readFileSync(join(APP, 'config.js'), 'utf8');
   assert.doesNotMatch(cfg, /eyJhbGciOi|sb_secret_/); // né JWT service_role né chiavi segrete
-  assert.match(cfg, /SUPABASE_URL = ''/);
-  assert.match(cfg, /SUPABASE_ANON_KEY = ''/);
+  assert.match(cfg, /SUPABASE_URL = '(https:\/\/[a-z0-9]+\.supabase\.co)?'/);
+  assert.match(cfg, /SUPABASE_ANON_KEY = '(sb_publishable_[A-Za-z0-9_-]+)?'/);
+  const code = cfg.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.doesNotMatch(code, /password|passphrase|service_role/i);
 });
 
 test('tokens.css contiene tutti i token del design system', () => {

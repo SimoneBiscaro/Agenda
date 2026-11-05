@@ -209,3 +209,25 @@ export function isValidTime(t) {
 export function weekFromMonth(monthDs, today) {
   return monthDs.slice(0, 7) === today.slice(0, 7) ? today : `${monthDs.slice(0, 7)}-01`;
 }
+
+/**
+ * Istante a parole, nel fuso di Roma: "oggi alle 9:12", "ieri alle 18:05", "il 3 novembre alle 9:12"
+ * (con l'anno se diverso da quello di oggi).
+ * @param {string} iso istante ISO
+ * @param {string} today 'AAAA-MM-GG'
+ */
+export function whenLabel(iso, today, timeZone = 'Europe/Rome') {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return '';
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date(t));
+  const get = (k) => parts.find((p) => p.type === k).value;
+  const ds = `${get('year')}-${get('month')}-${get('day')}`;
+  const time = `${Number(get('hour'))}:${get('minute')}`;
+  const diff = diffDays(ds, today);
+  if (diff === 0) return `oggi alle ${time}`;
+  if (diff === 1) return `ieri alle ${time}`;
+  const { y } = parseDs(ds);
+  return `il ${dayMonth(ds)}${y !== parseDs(today).y ? ` ${y}` : ''} alle ${time}`;
+}

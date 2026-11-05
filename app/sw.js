@@ -1,6 +1,6 @@
 /* Agenda — service worker. A ogni modifica dell'app shell incrementare CACHE_VERSION
  * e APP_VERSION in src/version.js con lo stesso valore (CLAUDE.md regola 7). */
-const CACHE_VERSION = '0.4.0';
+const CACHE_VERSION = '0.5.0';
 const SHELL_CACHE = `agenda-shell-${CACHE_VERSION}`;
 
 const SHELL = [
@@ -19,6 +19,11 @@ const SHELL = [
   './src/main.js',
   './src/router.js',
   './src/store/state.js',
+  './src/store/cloud.js',
+  './src/sync/crypto.js',
+  './src/sync/auth.js',
+  './src/sync/api.js',
+  './src/sync/sync.js',
   './src/ui/BigButton.js',
   './src/ui/Binding.js',
   './src/ui/CategoryChip.js',
@@ -37,6 +42,7 @@ const SHELL = [
   './src/views/giorno/GiornoView.js',
   './src/views/impegno/ImpegnoSheet.js',
   './src/views/impostazioni/CategoriaSheet.js',
+  './src/views/impostazioni/CloudSheet.js',
   './src/views/impostazioni/ImpostazioniView.js',
   './src/views/mese/MeseView.js',
   './src/views/settimana/SettimanaView.js',
