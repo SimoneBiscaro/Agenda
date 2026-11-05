@@ -161,3 +161,41 @@ export function step(view, anchor, dir) {
   }
   throw new Error(`Vista sconosciuta: ${view}`);
 }
+
+/* ---------- Fase 2 ---------- */
+
+/** I 7 giorni (lunedì → domenica) della settimana di `ds`. */
+export function weekDays(ds) {
+  const mon = startOfWeek(ds);
+  return Array.from({ length: 7 }, (_, i) => addDays(mon, i));
+}
+
+/** true per sabato e domenica. */
+export const isWeekend = (ds) => weekday(ds) >= 5;
+
+/** "5 novembre" */
+export function dayMonth(ds) {
+  const { m, d } = parseDs(ds);
+  return `${d} ${MONTHS[m - 1]}`;
+}
+
+/** "5 nov" */
+export function shortDate(ds) {
+  const { m, d } = parseDs(ds);
+  return `${d} ${MONTHS_SHORT[m - 1]}`;
+}
+
+/**
+ * Data di un impegno annuale nell'anno `year`: stesso giorno e mese;
+ * il 29 febbraio diventa 28 febbraio negli anni non bisestili.
+ */
+export function sameDayInYear(ds, year) {
+  const { m, d } = parseDs(ds);
+  return toDs(year, m, Math.min(d, daysInMonth(year, m)));
+}
+
+/** Ora "HH:MM" valida tra 00:00 e 23:59. */
+export function isValidTime(t) {
+  const m = /^(\d{2}):(\d{2})$/.exec(String(t ?? ''));
+  return Boolean(m) && Number(m[1]) <= 23 && Number(m[2]) <= 59;
+}

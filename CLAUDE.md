@@ -100,7 +100,7 @@ Solo ora d'inizio, nessuna durata o ora di fine (D2), nessuna nota, nessun alleg
 **`dates.js`**
 - `startOfWeek(ds)` = lunedì della settimana; `isoWeek(ds)` secondo ISO 8601 (test: 2026-01-01 → settimana 1; 2027-01-01 → settimana 53 del 2026; 2026-12-28 → 53).
 - `weekLabel(ds)`: titolo = mese e anno del **giovedì** della settimana ("Novembre 2026"); sottotitolo "2 – 8 nov · settimana 45", oppure "30 nov – 6 dic · settimana 49" se la settimana cavalca due mesi.
-- `monthGrid(year, month)`: righe da lunedì a domenica, **4, 5 o 6 righe** secondo il mese (test: febbraio 2027 = 4 righe; novembre 2026 = 5; marzo 2026 = 6), ogni cella `{ ds, inMonth, isToday, weekday }`.
+- `monthGrid(year, month)`: righe da lunedì a domenica, **4, 5 o 6 righe** secondo il mese (test: febbraio 2027 = 4 righe; ottobre 2026 = 5; novembre 2026 = 6, perché l’1 è domenica e il 30 lunedì; marzo 2026 = 6), ogni cella `{ ds, inMonth, isToday, weekday }`.
 - Nomi italiani: giorni (Lunedì…Domenica, abbreviati Lun…Dom, iniziali L M M G V S D) e mesi (gennaio…dicembre, abbreviati gen…dic). Titoli con iniziale maiuscola.
 - Navigazione `step(view, anchor, dir)`: settimana ±7 giorni; mese → il giorno 1 del mese ±1; giorno ±1. Fine mese, bisestile e cambio ora legale (29/03/2026, 25/10/2026) testati: si lavora solo su date di calendario, mai su millisecondi.
 
