@@ -1,8 +1,8 @@
 import { render } from '../vendor/preact.mjs';
-import { useEffect, useRef } from '../vendor/preact-hooks.mjs';
+import { useEffect, useLayoutEffect, useRef } from '../vendor/preact-hooks.mjs';
 import { html } from './ui/html.js';
-import { signal, useSignal } from './store/state.js';
-import { route, startRouter, navigate, pathFor, todayDs } from './router.js';
+import { signal, useSignal, useQuery } from './store/state.js';
+import { route, startRouter, navigate, pathFor, todayDs, hourNow } from './router.js';
 import { step, startOfWeek, monthStart, weekLabel, monthLabel, dayLabel } from './domain/dates.js';
 import { Binding } from './ui/Binding.js';
 import { Header } from './ui/Header.js';
@@ -14,13 +14,17 @@ import { MeseView } from './views/mese/MeseView.js';
 import { GiornoView } from './views/giorno/GiornoView.js';
 import { ImpostazioniView } from './views/impostazioni/ImpostazioniView.js';
 import { CatalogoView } from './views/catalogo/CatalogoView.js';
+import { ImpegnoSheet } from './views/impegno/ImpegnoSheet.js';
+import { newEventDate, newForm, editForm } from './domain/events.js';
+import { classifySwipe, isTapLocked } from './domain/swipe.js';
 import { getRepo } from './store/repo.js';
 import { seedDefaults, startupMaintenance } from './store/seed.js';
 import { loadSettings, applyLargeText } from './store/settings.js';
 
 /* ---------- Oggi (si aggiorna a mezzanotte e al ritorno in primo piano) ---------- */
 const today = signal(todayDs());
-const refreshToday = () => { today.value = todayDs(); };
+const nowHour = signal(hourNow());
+const refreshToday = () => { today.value = todayDs(); nowHour.value = hourNow(); };
 setInterval(refreshToday, 60000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshToday(); });
 
@@ -133,23 +137,79 @@ function headerFor(r, t) {
   };
 }
 
+/* ---------- Pannello Nuovo / Modifica impegno ---------- */
+const editor = signal(null); // { id, open, mode, initial, event }
+let editorSeq = 0;
+function openNew(date, time = '') {
+  editor.value = { id: ++editorSeq, open: true, mode: 'new', initial: newForm(date, time) };
+}
+function openEdit(event) {
+  editor.value = { id: ++editorSeq, open: true, mode: 'edit', initial: editForm(event), event };
+}
+const closeEditor = () => { if (editor.value) editor.value = { ...editor.value, open: false }; };
+
+/** Impegni e categorie, riletti a ogni modifica. */
+async function loadAgenda() {
+  const repo = await getRepo();
+  const [events, categories] = await Promise.all([repo.list('event'), repo.list('category')]);
+  return { events, categories };
+}
+const EMPTY = { events: [], categories: [] };
+
+/* ---------- Sfoglio con il dito (o trascinando con il mouse) ---------- */
+function useSwipe(r) {
+  const start = useRef(null);
+  const lastSwipeAt = useRef(-Infinity);
+  if (!r || !CALENDAR.has(r.view)) return {};
+  return {
+    onPointerDown: (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      start.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    },
+    onPointerUp: (e) => {
+      const s = start.current;
+      start.current = null;
+      if (!s || s.id !== e.pointerId) return;
+      const kind = classifySwipe(e.clientX - s.x, e.clientY - s.y);
+      if (!kind) return;
+      lastSwipeAt.current = performance.now();
+      navigate(pathFor(r.view, step(r.view, r.anchor, kind === 'next' ? 1 : -1)));
+    },
+    onPointerCancel: () => { start.current = null; },
+    // Dopo uno sfoglio i tocchi sono ignorati per 350 ms: niente giorno aperto per sbaglio.
+    onClickCapture: (e) => {
+      if (isTapLocked(lastSwipeAt.current, performance.now())) { e.preventDefault(); e.stopPropagation(); }
+    },
+  };
+}
+
 function App() {
   const r = useSignal(route);
   const t = useSignal(today);
+  const hour = useSignal(nowHour);
+  const ed = useSignal(editor);
+  const { data = EMPTY } = useQuery(loadAgenda, ['event', 'category']);
   const prev = useRef(null);
   const dir = flipDir(prev.current, r);
   useEffect(() => { prev.current = r; });
   const mainRef = useRef(null);
   const key = pageKey(r);
-  useEffect(() => { mainRef.current?.scrollTo?.(0, 0); }, [key]);
+  // Prima degli effetti delle viste: così il Giorno di oggi può poi scorrere all'ora giusta.
+  useLayoutEffect(() => { if (mainRef.current) mainRef.current.scrollTop = 0; }, [key]);
+  const swipe = useSwipe(r);
 
   if (!r) return null;
+  const { events, categories } = data;
   const openDay = (ds) => navigate(pathFor('giorno', ds));
+  const editOccurrence = (occ) => {
+    const ev = events.find((e) => e.id === occ.eventId);
+    if (ev) openEdit(ev);
+  };
   let page;
-  if (r.view === 'settimana') page = html`<${SettimanaView} anchor=${r.anchor} today=${t} onOpenDay=${openDay} />`;
+  if (r.view === 'settimana') page = html`<${SettimanaView} anchor=${r.anchor} today=${t} events=${events} categories=${categories} onOpenDay=${openDay} />`;
   else if (r.view === 'mese') page = html`<${MeseView} anchor=${r.anchor} today=${t} onOpenDay=${openDay} />`;
-  else if (r.view === 'giorno') page = html`<${GiornoView} anchor=${r.anchor} today=${t} />`;
-  else if (r.view === 'impostazioni') page = html`<${ImpostazioniView} />`;
+  else if (r.view === 'giorno') page = html`<${GiornoView} anchor=${r.anchor} today=${t} nowHour=${hour} events=${events} categories=${categories} onNew=${openNew} onEdit=${editOccurrence} />`;
+  else if (r.view === 'impostazioni') page = html`<${ImpostazioniView} today=${t} />`;
   else page = html`<${CatalogoView} />`;
 
   const calendar = CALENDAR.has(r.view);
@@ -160,15 +220,17 @@ function App() {
       <${Header} ...${headerFor(r, t)} />
       <main class="app__main" id="contenuto" ref=${mainRef}>
         ${calendar
-          ? html`<${PageFlip} flipKey=${key} dir=${dir}>${page}<//>`
+          ? html`<${PageFlip} flipKey=${key} dir=${dir} ...${swipe}>${page}<//>`
           : html`<div class="page">${page}</div>`}
       </main>
       ${calendar && html`
         <div class="bottombar">
-          <${BigButton} label="Nuovo impegno" icon="plus" />
+          <${BigButton} label="Nuovo impegno" icon="plus" onClick=${() => openNew(newEventDate(r.view, r.anchor, t))} />
         </div>`}
       <${ToastHost} />
-    </div>`;
+    </div>
+    ${ed && html`<${ImpegnoSheet} key=${ed.id} open=${ed.open} mode=${ed.mode} initial=${ed.initial}
+      event=${ed.event} categories=${categories} onClose=${closeEditor} />`}`;
 }
 
 /* ---------- Archivio locale ---------- */
