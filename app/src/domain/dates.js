@@ -199,3 +199,13 @@ export function isValidTime(t) {
   const m = /^(\d{2}):(\d{2})$/.exec(String(t ?? ''));
   return Boolean(m) && Number(m[1]) <= 23 && Number(m[2]) <= 59;
 }
+
+/**
+ * Da Mese a Settimana (§8): se il mese mostrato è quello di oggi si va alla settimana di oggi,
+ * altrimenti alla prima settimana del mese (quella che contiene il giorno 1).
+ * @param {string} monthDs un giorno qualunque del mese mostrato
+ * @param {string} today
+ */
+export function weekFromMonth(monthDs, today) {
+  return monthDs.slice(0, 7) === today.slice(0, 7) ? today : `${monthDs.slice(0, 7)}-01`;
+}
