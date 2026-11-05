@@ -744,3 +744,15 @@ button.catlist__row:active { background: var(--paper-2); }
 .catlist__name { flex: 1 1 auto; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
 .catlist__edit { display: inline-flex; align-items: center; gap: 2px; flex: none; font-size: var(--fs-label); font-weight: 700; color: var(--ribbon-dark); }
 .catlist__note { flex: none; font-size: var(--fs-label); color: var(--ink-2); }
+
+/* ---------- Copia di sicurezza ---------- */
+.cloud__warning {
+  padding: 12px 14px;
+  border-left: 5px solid var(--ribbon);
+  border-radius: var(--radius-s);
+  background: var(--ribbon-tint);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: var(--fs-label);
+}
+.field__hint { font-size: var(--fs-label); color: var(--ink-2); }
