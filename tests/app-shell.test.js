@@ -136,3 +136,24 @@ test('i font sono self-hosted e dichiarati con font-display: swap', () => {
     assert.ok(src && existsSync(join(APP, src[1])), `font mancante: ${f}`);
   }
 });
+
+test('docs/supabase.sql crea tutto lo schema del progetto dedicato, in modo idempotente', () => {
+  const sql = readFileSync(fileURLToPath(new URL('../docs/supabase.sql', import.meta.url)), 'utf8');
+  for (const t of ['records', 'vault', 'snapshots']) {
+    assert.match(sql, new RegExp(`create table if not exists public\\.${t} \\(`), t);
+    assert.match(sql, new RegExp(`alter table public\\.${t}\\s+enable row level security`), `RLS ${t}`);
+    assert.match(sql, new RegExp(`revoke all on public\\.${t}\\s+from anon`), `anon ${t}`);
+  }
+  assert.match(sql, /create or replace function public\.upsert_records\(rows jsonb\)/);
+  assert.match(sql, /create or replace function public\.ping\(\)/);
+  assert.doesNotMatch(sql, /^\s*create policy (?!.*\(select auth\.uid\(\)\) = user_id)/m, 'ogni policy filtra per utente');
+  assert.doesNotMatch(sql, /^\s*create (table|index) (?!if not exists)/m, 'idempotente');
+});
+
+test('keepalive: chiama ping() con la chiave pubblica letta dai secrets', () => {
+  const yml = readFileSync(fileURLToPath(new URL('../.github/workflows/keepalive.yml', import.meta.url)), 'utf8');
+  assert.match(yml, /schedule:/);
+  assert.match(yml, /rpc\/ping/);
+  assert.match(yml, /secrets\.SUPABASE_ANON_KEY/);
+  assert.doesNotMatch(yml.replace(/^\s*#.*$/gm, ''), /service_role|sb_secret_|sb_publishable_/, 'nessuna chiave scritta nel file');
+});
