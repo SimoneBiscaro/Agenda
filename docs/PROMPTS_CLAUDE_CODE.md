@@ -9,8 +9,8 @@ Prompt da incollare in Claude Code (claude.ai/code o app iPhone), una fase alla 
 2. Nel repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 3. Carica nella radice `CLAUDE.md` e in `docs/` questo file (**Add file → Upload files**, poi **Commit changes**). Se il repo lo collego io da claude.ai, questo passo lo faccio io.
 
-**Supabase** (stesso progetto di NexusLife)
-4. supabase.com/dashboard → progetto NexusLife → **Authentication → Users → Add user → Create new user**: email dedicata (es. `simobiscaro01+agenda@gmail.com`), password robusta, **Auto Confirm User** attivo. Salva email e password nel tuo gestore di password.
+**Supabase** (progetto nuovo, dedicato all'Agenda: vedi `docs/supabase.sql`)
+4. supabase.com/dashboard → progetto dell'Agenda → **Authentication → Users → Add user → Create new user**: email dedicata (es. `simobiscaro01+agenda@gmail.com`), password robusta, **Auto Confirm User** attivo. Salva email e password nel tuo gestore di password.
 5. Scegli ora la **passphrase** della cifratura (almeno 12 caratteri) e salvala nello stesso posto. Serve in Fase 5.
 6. Non toccare "Allow new users to sign up": resta spento.
 
@@ -108,10 +108,10 @@ Leggi CLAUDE.md per intero: è vincolante.
 
 FASE 5 — Copia di sicurezza continua e cifrata su Supabase (§9).
 
-1. config.js: SUPABASE_URL = 'https://hsnzyyynsstxaodkozzv.supabase.co' e SUPABASE_ANON_KEY = 'sb_publishable_wFR753ZmdrbRreKYDy_DJg_hnS-xfbE' (pubblici per design, già usati da NexusLife).
-2. src/sync/crypto.js, auth.js, api.js, sync.js: copia e adatta quelli di NexusLife. Usa le tabelle records e vault ESISTENTI e la RPC upsert_records esistente, senza modificarle. Outbox, sync all'avvio, su online, ogni 60 s in primo piano, backoff, gestione orologio sfasato, dedupe.js dopo il download.
+1. config.js: SUPABASE_URL e SUPABASE_ANON_KEY (publishable) del progetto Supabase dedicato all'Agenda.
+2. src/sync/crypto.js, auth.js, api.js, sync.js: copia e adatta quelli di NexusLife. Tabelle records e vault e RPC upsert_records come in NexusLife, create da docs/supabase.sql nel progetto dedicato. Outbox, sync all'avvio, su online, ogni 60 s in primo piano, backoff, gestione orologio sfasato, dedupe.js dopo il download.
 3. SyncDot nell'intestazione (§9) e sezione "Copia di sicurezza" in Impostazioni con stato a parole. Area tecnica → "Collega la copia di sicurezza": email, password, passphrase (min 12, ripetuta), "Ricorda su questo dispositivo" attivo, avviso sulla passphrase; primo collegamento crea il vault, successivi lo verificano; "Scollega" con Confirm. Messaggi senza gergo (regola 9).
-4. docs/supabase.sql: SOLO la tabella snapshots di §9 con RLS, policy, grant e indice, idempotente, con le istruzioni passo passo in testa (SQL Editor → New query → incolla → Run → Success). Avvertenza in testa: "Non contiene e non modifica records, vault, upsert_records e ping, che appartengono già al progetto."
+4. docs/supabase.sql: schema completo del progetto dedicato (records, vault, snapshots, RLS, upsert_records, ping), idempotente, con le istruzioni passo passo in testa (SQL Editor → New query → incolla → Run → Success). .github/workflows/keepalive.yml che chiama ping() ogni 3 giorni.
 5. tests/helpers/fake-supabase.js e test di sync (cifra/decifra, LWW, outbox offline → online, passphrase sbagliata, dedupe categorie, nessun campo in chiaro oltre entity/id/updated_at/deleted).
 
 Non fare in questa fase: fotografie giornaliere e ripristino (Fase 6).
