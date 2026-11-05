@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="ring" x1="0" x2="1"><stop offset="0" stop-color="#BDB09A"/><stop offset=".45" stop-color="#F7F2E8"/><stop offset="1" stop-color="#A89A82"/></linearGradient></defs><rect width="512" height="512" rx="0" fill="#2B241C"/>
+  <rect x="100" y="118" width="312" height="318" rx="22" fill="#F7F2E8"/>
+  <rect x="100" y="118" width="312" height="70" rx="22" fill="#EFE7D6"/>
+  <rect x="100" y="166" width="312" height="22" fill="#EFE7D6"/>
+  <path d="M136 232H376M136 284H376M136 336H376M136 388H300" stroke="#DDD2BE" stroke-width="8" stroke-linecap="round"/>
+  <rect x="136" y="214" width="96" height="36" rx="8" fill="#1F5FAD"/>
+  <rect x="136" y="318" width="132" height="36" rx="8" fill="#00796B"/>
+  <path d="M318 118H362V470L340 448L318 470Z" fill="#A3242B"/>
+  <path d="M318 118H330V458L318 470Z" fill="#7E1A20"/>
+  <rect x="130" y="90" width="18" height="56" rx="9" fill="url(#ring)"/><rect x="178" y="90" width="18" height="56" rx="9" fill="url(#ring)"/><rect x="226" y="90" width="18" height="56" rx="9" fill="url(#ring)"/><rect x="274" y="90" width="18" height="56" rx="9" fill="url(#ring)"/><rect x="370" y="90" width="18" height="56" rx="9" fill="url(#ring)"/>
+</svg>
