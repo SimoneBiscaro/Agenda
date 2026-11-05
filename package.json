@@ -1,0 +1,11 @@
+{
+  "name": "agenda",
+  "private": true,
+  "type": "module",
+  "description": "Agenda PWA — nessuna dipendenza, nessun build step.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test tests/",
+    "serve": "python3 -m http.server -d app 8080"
+  }
+}
