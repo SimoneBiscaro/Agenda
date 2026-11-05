@@ -45,7 +45,7 @@ Obiettivo: poche funzioni, grandi, impossibili da sbagliare. La pagina principal
 ├── tests/  *.test.js  helpers/ (fake-idb.js, fake-supabase.js)
 └── .github/workflows/  pages.yml
 ```
-Percorsi sempre relativi (`./src/...`): il sito vive sotto `https://simonebiscaro.github.io/agenda/`.
+Percorsi sempre relativi (`./src/...`): il sito vive sotto `https://simonebiscaro.github.io/Agenda/`.
 
 ## 4. Regole ferree
 1. Codice completo e funzionante: niente stub, niente segnaposto, niente commenti "da fare", niente dati finti nel prodotto. Ammesso un pulsante "Carica impegni di prova" in Impostazioni → Area tecnica, che li marca `demo:true` e un pulsante che li cancella.

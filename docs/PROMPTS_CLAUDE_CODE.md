@@ -1,6 +1,6 @@
 # PROMPTS_CLAUDE_CODE.md — Agenda
 
-Prompt da incollare in Claude Code (claude.ai/code o app iPhone), una fase alla volta, sul repo `SimoneBiscaro/agenda`. Ogni fase produce un'app funzionante e pubblicata.
+Prompt da incollare in Claude Code (claude.ai/code o app iPhone), una fase alla volta, sul repo `SimoneBiscaro/Agenda`. Ogni fase produce un'app funzionante e pubblicata.
 
 ## Fase 0 — Preparazione manuale (circa 10 minuti, la fai tu)
 
@@ -15,13 +15,13 @@ Prompt da incollare in Claude Code (claude.ai/code o app iPhone), una fase alla 
 6. Non toccare "Allow new users to sign up": resta spento.
 
 **Claude Code**
-7. claude.ai/code → collega GitHub se richiesto → repo `SimoneBiscaro/agenda`, branch `main`, modalità **Accept edits** (o Auto).
+7. claude.ai/code → collega GitHub se richiesto → repo `SimoneBiscaro/Agenda`, branch `main`, modalità **Accept edits** (o Auto).
 
 ## Ciclo di ogni fase
 1. Fai il **merge della fase precedente** prima di iniziare.
 2. Incolla il blocco della fase e invia. Puoi chiudere la scheda: la sessione continua.
 3. A fine lavoro: **Create PR** → su GitHub **Merge pull request**.
-4. Scheda **Actions**: deploy verde = app aggiornata su `https://simonebiscaro.github.io/agenda/`. Sull'iPhone tocca l'avviso "C'è una versione nuova".
+4. Scheda **Actions**: deploy verde = app aggiornata su `https://simonebiscaro.github.io/Agenda/`. Sull'iPhone tocca l'avviso "C'è una versione nuova".
 5. Problemi? Scrivili nella stessa sessione, anche dopo la PR.
 6. Una sessione nuova per fase dà contesto pulito; le fasi 1–2 e 5–6 possono stare nella stessa sessione.
 
