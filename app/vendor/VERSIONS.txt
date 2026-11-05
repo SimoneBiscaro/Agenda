@@ -1,0 +1,11 @@
+Librerie copiate da npm una volta sola e servite così come sono (nessun build step).
+
+preact 11.1.1 — MIT — dist/preact.mjs → preact.mjs
+preact 11.1.1 — MIT — hooks/dist/hooks.mjs → preact-hooks.mjs (import "preact" riscritto in "./preact.mjs")
+htm 3.1.1 — Apache-2.0 — dist/htm.mjs → htm.mjs
+
+Font (app/fonts/, sottoinsieme latin, woff2):
+@fontsource/atkinson-hyperlegible 5.3.0 — OFL-1.1 — 400 e 700 normal
+@fontsource/lora 5.3.0 — OFL-1.1 — 500 e 600 normal
+
+Riga "//# sourceMappingURL" rimossa dai .mjs (le mappe non sono incluse).

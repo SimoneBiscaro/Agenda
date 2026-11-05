@@ -1,0 +1,124 @@
+import { createPortal } from '../../vendor/preact.mjs';
+import { useEffect, useId, useRef, useState } from '../../vendor/preact-hooks.mjs';
+import { html } from './html.js';
+
+const EXIT_MS = 300;
+const DRAG_CLOSE_PX = 110;
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+let openCount = 0;
+function lockApp(lock) {
+  openCount = Math.max(0, openCount + (lock ? 1 : -1));
+  const active = openCount > 0;
+  document.documentElement.classList.toggle('has-sheet', active);
+  const app = document.getElementById('app');
+  if (app) app.inert = active;
+}
+
+/**
+ * Pannello che sale dal basso (raggio 22 px, al massimo 90% dell'altezza, maniglia grigia).
+ * Si chiude con lo sfondo scurito, con Esc o trascinando giù la maniglia.
+ * Il fuoco entra nel pannello, ci resta (Tab gira all'interno) e torna dov'era alla chiusura.
+ * @param {{ open: boolean, onClose: () => void, title: string, children?: any, footer?: any }} props
+ */
+export function Sheet({ open, onClose, title, children, footer }) {
+  const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const panelRef = useRef(null);
+  const returnFocus = useRef(null);
+  const drag = useRef(null);
+  const titleId = `sheet-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  useEffect(() => {
+    if (open) {
+      if (!returnFocus.current) returnFocus.current = document.activeElement;
+      setMounted(true);
+      setDragY(0);
+      let raf2 = 0;
+      const raf1 = requestAnimationFrame(() => { raf2 = requestAnimationFrame(() => setVisible(true)); });
+      return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
+    }
+    setVisible(false);
+    const t = setTimeout(() => setMounted(false), EXIT_MS);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  useEffect(() => {
+    if (!mounted) return undefined;
+    lockApp(true);
+    const panel = panelRef.current;
+    const first = panel?.querySelector('[data-autofocus]');
+    (first || panel)?.focus({ preventScroll: true });
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); closeRef.current?.(); return; }
+      if (e.key !== 'Tab' || !panel) return;
+      const items = [...panel.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent !== null);
+      if (!items.length) { e.preventDefault(); panel.focus(); return; }
+      const a = items[0]; const z = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === a || document.activeElement === panel)) { e.preventDefault(); z.focus(); }
+      else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+
+    // Tastiera dell'iPhone: il pannello sale di quanto la tastiera copre e il campo attivo va al centro.
+    const vv = window.visualViewport;
+    const onViewport = () => {
+      if (!vv || !panel) return;
+      const covered = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      panel.style.marginBottom = covered > 80 ? `${covered}px` : '';
+    };
+    const onFocusIn = (e) => {
+      if (!e.target.matches?.('input, textarea, select')) return;
+      setTimeout(() => e.target.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 320);
+    };
+    vv?.addEventListener('resize', onViewport);
+    panel?.addEventListener('focusin', onFocusIn);
+    return () => {
+      vv?.removeEventListener('resize', onViewport);
+      panel?.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('keydown', onKey);
+      lockApp(false);
+      const el = returnFocus.current;
+      returnFocus.current = null;
+      if (el && typeof el.focus === 'function' && document.contains(el)) el.focus({ preventScroll: true });
+    };
+  }, [mounted]);
+
+  if (!mounted) return null;
+
+  const onGrabDown = (e) => {
+    drag.current = { y: e.clientY, id: e.pointerId };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    setDragging(true);
+  };
+  const onGrabMove = (e) => {
+    if (!drag.current || drag.current.id !== e.pointerId) return;
+    setDragY(Math.max(0, e.clientY - drag.current.y));
+  };
+  const onGrabUp = (e) => {
+    if (!drag.current || drag.current.id !== e.pointerId) return;
+    const dy = e.clientY - drag.current.y;
+    drag.current = null;
+    setDragging(false);
+    if (dy > DRAG_CLOSE_PX) onClose();
+    else setDragY(0);
+  };
+
+  const cls = `sheet${visible && open ? ' is-open' : ''}${dragging ? ' is-dragging' : ''}`;
+  return createPortal(html`
+    <div class=${cls} style=${`--drag-y:${dragY}px`}>
+      <div class="sheet__backdrop" onClick=${onClose} aria-hidden="true"></div>
+      <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby=${titleId} tabindex="-1" ref=${panelRef}>
+        <div class="sheet__grab" onPointerDown=${onGrabDown} onPointerMove=${onGrabMove}
+          onPointerUp=${onGrabUp} onPointerCancel=${onGrabUp} aria-hidden="true"></div>
+        <h2 class="sheet__title" id=${titleId}>${title}</h2>
+        <div class="sheet__body">${children}</div>
+        ${footer && html`<div class="sheet__foot">${footer}</div>`}
+      </div>
+    </div>`, document.body);
+}

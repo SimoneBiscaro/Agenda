@@ -1,0 +1,76 @@
+/* Agenda — design system "Agenda di carta" (CLAUDE.md §5). Solo tema chiaro. */
+:root {
+  /* Carta e linee */
+  --paper: #F7F2E8;
+  --paper-2: #EFE7D6;
+  --paper-weekend: #F2EBDC;
+  --today: #FFF3C4;
+  --line: #DDD2BE;
+  --field-border: #8C7F69;
+  --white: #FFFFFF;
+
+  /* Inchiostro */
+  --ink: #1F1A14;
+  --ink-2: #5A5043;
+  --ink-3: #6B604F; /* testo tenue, contrasto ≥ 5:1 su paper */
+
+  /* Rilegatura e nastro segnalibro */
+  --binding: #2B241C;
+  --ribbon: #A3242B;
+  --ribbon-dark: #7E1A20;
+  --ribbon-tint: #F9E3E3;
+
+  --focus: #1F5FAD;
+
+  /* Raggi */
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-sheet: 22px;
+
+  /* Bersagli di tocco */
+  --tap-min: 48px;
+  --tap-main: 64px;
+
+  /* Font */
+  --font-ui: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-title: Lora, Georgia, serif;
+
+  /* Scala testo (rem: base 16 px, 18,4 px con "Testo più grande") */
+  --fs-page-title: 1.75rem;
+  --fs-week-day: 1.875rem;
+  --fs-sheet-title: 1.625rem;
+  --fs-main-button: 1.375rem;
+  --fs-event: 1.125rem;
+  --fs-label: 1rem;
+  --fs-more: 0.8125rem; /* solo l'indicatore "+2" nel mese, in grassetto */
+
+  /* Palette categorie (testo bianco sopra) */
+  --cat-rosso: #B3261E;
+  --cat-blu: #1F5FAD;
+  --cat-verde-acqua: #00796B;
+  --cat-verde: #4E7D1E;
+  --cat-marrone: #7A4E1D;
+  --cat-arancione: #C2611F; /* solo con testo grassetto ≥ 18 px */
+  --cat-viola: #8E3B8E;
+  --cat-grigio: #4A4A4A;
+
+  /* Stato della copia di sicurezza (solo il puntino, contrasto ≥ 3:1) */
+  --dot-ok: #2E7D32;
+  --dot-offline: #6B604F;
+  --dot-attention: #C2611F;
+
+  /* Misure di layout */
+  --binding-h: 26px;
+  --column: 480px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+
+  /* Movimento */
+  --flip-ms: 450ms;
+  --flip-ease: cubic-bezier(.2, .75, .25, 1);
+}
+
+html { font-size: 100%; }
+/* "Testo più grande" (D5): base +15% → 18,4 px */
+html.large-text { font-size: 115%; }
