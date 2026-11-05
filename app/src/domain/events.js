@@ -180,3 +180,43 @@ export function validate(form = {}) {
     },
   };
 }
+
+/* ---------- Modulo dell'impegno (Fase 3) ---------- */
+
+export const DEFAULT_TIME = '09:00';
+
+/**
+ * Giorno proposto da "+ Nuovo impegno" (§8): quello del Giorno aperto, altrimenti oggi se è
+ * visibile, altrimenti il primo giorno visibile (lunedì della settimana o giorno 1 del mese).
+ * @param {'settimana'|'mese'|'giorno'} view
+ * @param {string} anchor 'AAAA-MM-GG' (per il mese, un giorno qualunque del mese)
+ * @param {string} today
+ */
+export function newEventDate(view, anchor, today) {
+  if (view === 'giorno') return anchor;
+  if (view === 'mese') return anchor.slice(0, 7) === today.slice(0, 7) ? today : `${anchor.slice(0, 7)}-01`;
+  const days = weekDays(anchor);
+  return days.includes(today) ? today : days[0];
+}
+
+/**
+ * Valori iniziali del modulo "Nuovo impegno". Senza ora: "Tutto il giorno" (con 09:00 pronto
+ * se si sceglie "A un orario"); con ora (tocco su una riga oraria): "A un orario".
+ */
+export function newForm(date, time = '', categoryId = 'cat-altro') {
+  return {
+    title: '', date, timeMode: time ? 'time' : 'allday', time: time || DEFAULT_TIME, categoryId, repeat: 'none',
+  };
+}
+
+/** Valori iniziali del modulo "Modifica impegno". */
+export function editForm(event) {
+  return {
+    title: event.title ?? '',
+    date: event.date,
+    timeMode: event.time ? 'time' : 'allday',
+    time: event.time || DEFAULT_TIME,
+    categoryId: event.categoryId || 'cat-altro',
+    repeat: event.repeat === 'yearly' ? 'yearly' : 'none',
+  };
+}

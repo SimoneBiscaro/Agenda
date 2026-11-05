@@ -1,6 +1,6 @@
 /* Agenda — service worker. A ogni modifica dell'app shell incrementare CACHE_VERSION
  * e APP_VERSION in src/version.js con lo stesso valore (CLAUDE.md regola 7). */
-const CACHE_VERSION = '0.2.0';
+const CACHE_VERSION = '0.3.0';
 const SHELL_CACHE = `agenda-shell-${CACHE_VERSION}`;
 
 const SHELL = [
@@ -35,6 +35,7 @@ const SHELL = [
   './src/version.js',
   './src/views/catalogo/CatalogoView.js',
   './src/views/giorno/GiornoView.js',
+  './src/views/impegno/ImpegnoSheet.js',
   './src/views/impostazioni/ImpostazioniView.js',
   './src/views/mese/MeseView.js',
   './src/views/settimana/SettimanaView.js',

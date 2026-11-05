@@ -17,6 +17,11 @@ export function todayDs(now = new Date()) {
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
+/** Ora corrente a Roma (0–23). */
+export function hourNow(now = new Date()) {
+  return Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', hourCycle: 'h23' }).format(now));
+}
+
 /**
  * @param {string} hash
  * @returns {{ view: string, anchor?: string } | null} null se la rotta non esiste
@@ -63,8 +68,15 @@ function syncFromHash() {
   if (!cur || cur.view !== next.view || cur.anchor !== next.anchor) route.value = next;
 }
 
-/** Avvio: senza rotta valida si apre la Settimana di oggi. */
+/**
+ * Avvio: sempre la Settimana di oggi (§8, l'ultima vista non si ricorda), anche dopo un
+ * ricaricamento. Solo #/catalogo resta apribile a mano.
+ */
 export function startRouter() {
+  const first = parseHash(location.hash);
+  if (!first || first.view !== 'catalogo') {
+    history.replaceState(null, '', `${location.pathname}${location.search}#${defaultPath(todayDs())}`);
+  }
   window.addEventListener('hashchange', syncFromHash);
   syncFromHash();
 }
