@@ -14,6 +14,9 @@ import { MeseView } from './views/mese/MeseView.js';
 import { GiornoView } from './views/giorno/GiornoView.js';
 import { ImpostazioniView } from './views/impostazioni/ImpostazioniView.js';
 import { CatalogoView } from './views/catalogo/CatalogoView.js';
+import { getRepo } from './store/repo.js';
+import { seedDefaults, startupMaintenance } from './store/seed.js';
+import { loadSettings, applyLargeText } from './store/settings.js';
 
 /* ---------- Oggi (si aggiorna a mezzanotte e al ritorno in primo piano) ---------- */
 const today = signal(todayDs());
@@ -168,6 +171,20 @@ function App() {
     </div>`;
 }
 
+/* ---------- Archivio locale ---------- */
+/** Al primo avvio crea categorie e impostazioni; a ogni avvio elimina le tombstone scadute. */
+async function initStore() {
+  try {
+    const repo = await getRepo();
+    await seedDefaults(repo);
+    await startupMaintenance(repo);
+    applyLargeText((await loadSettings(repo)).largeText);
+  } catch (err) {
+    console.warn('Archivio locale non disponibile:', err);
+  }
+}
+
 startRouter();
 render(html`<${App} />`, document.getElementById('app'));
+initStore();
 registerServiceWorker();

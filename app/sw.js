@@ -1,6 +1,6 @@
 /* Agenda — service worker. A ogni modifica dell'app shell incrementare CACHE_VERSION
  * e APP_VERSION in src/version.js con lo stesso valore (CLAUDE.md regola 7). */
-const CACHE_VERSION = '0.1.0';
+const CACHE_VERSION = '0.2.0';
 const SHELL_CACHE = `agenda-shell-${CACHE_VERSION}`;
 
 const SHELL = [
@@ -44,6 +44,15 @@ const SHELL = [
   './vendor/htm.mjs',
   './vendor/preact-hooks.mjs',
   './vendor/preact.mjs',
+  './src/domain/dedupe.js',
+  './src/domain/events.js',
+  './src/domain/snapshots.js',
+  './src/domain/swipe.js',
+  './src/store/db.js',
+  './src/store/demo.js',
+  './src/store/repo.js',
+  './src/store/seed.js',
+  './src/store/settings.js',
 ];
 
 const scopeUrl = (p) => new URL(p, self.registration.scope).href;
